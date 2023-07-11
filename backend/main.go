@@ -2,56 +2,25 @@ package main
 
 import (
 	"fmt"
-	"github.com/gorilla/websocket"
-	"log"
+	"github.com/mxstrv/go-react-chat/pkg/websocket"
 	"net/http"
 )
 
-// Define upgrader
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	// For testing purposes all connection will be approved
-	CheckOrigin: func(r *http.Request) bool { return true },
-}
-
-// Define reader to listen to our websocket endpoints
-func reader(conn *websocket.Conn) {
-	for {
-		messageType, p, err := conn.ReadMessage()
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		fmt.Println(string(p))
-		if err := conn.WriteMessage(messageType, p); err != nil {
-			log.Println(err)
-			return
-		}
-
-	}
-}
-
-// Define websocket endpoint
 func serveWs(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.Host)
-
-	ws, err := upgrader.Upgrade(w, r, nil)
+	ws, err := websocket.Upgrade(w, r)
 	if err != nil {
-		log.Println(err)
+		fmt.Fprintf(w, "%+V\n", err)
 	}
-	reader(ws)
+	go websocket.Writer(ws)
+	websocket.Reader(ws)
 }
 
 func setupRoutes() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, _ = fmt.Fprintf(w, "Simple Server")
-	})
 	http.HandleFunc("/ws", serveWs)
 }
 
 func main() {
-	fmt.Println("Chat application v0.1")
+	fmt.Println("Chat application v0.2 starting")
 	setupRoutes()
 	http.ListenAndServe("localhost:8080", nil)
 }
