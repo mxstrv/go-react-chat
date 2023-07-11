@@ -1,23 +1,25 @@
-const socket = new WebSocket('wss://localhost:8080/ws');
+const socket = new WebSocket('ws://localhost:8080/ws');
 
-let connect = () => {
-    console.log('Attempting connection...')
+let connect = cb => {
+    console.log("connecting");
 
     socket.onopen = () => {
-        console.log('Connection successful!')
-    }
+        console.log("Successfully Connected");
+    };
 
     socket.onmessage = msg => {
-        console.log(msg)
-    }
+        console.log(msg);
+        cb(msg);
+    };
+
     socket.onclose = event => {
         console.log("Socket Closed Connection: ", event);
-    }
+    };
 
     socket.onerror = error => {
         console.log("Socket Error: ", error);
-    }
-}
+    };
+};
 
 let sendMsg = msg => {
     console.log('sending message: ', msg)
